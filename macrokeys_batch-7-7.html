@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MacroKeys · Batch</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;700;800&display=swap');
+  :root {
+    --bg:#111214; --surface:#1a1c1f; --card:#1f2124; --border:#3a3d42;
+    --silver:#a8adb5; --silver-hi:#e2e6ea; --silver-lo:#6b7280;
+    --btn:#2a2d32; --btn-border:#4a4f57; --btn-hi:#34383f;
+    --text:#f0f2f4; --muted:#6b7280;
+    --mono:'Share Tech Mono',monospace; --sans:'Syne',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;padding:16px;
+    background-image:radial-gradient(ellipse at 20% 0%,rgba(200,205,212,.04) 0%,transparent 50%),
+    radial-gradient(ellipse at 80% 100%,rgba(168,173,181,.03) 0%,transparent 50%);}
+
+  header{text-align:center;margin-bottom:24px;padding-top:16px;}
+  .logo{font-size:10px;font-family:var(--mono);color:var(--silver);letter-spacing:4px;text-transform:uppercase;margin-bottom:6px;opacity:.7;}
+  h1{font-size:26px;font-weight:800;line-height:1;background:linear-gradient(135deg,#ffffff 0%,var(--silver) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px;}
+  .subtitle{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;}
+
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;}
+  .section-label{font-family:var(--mono);font-size:10px;color:var(--silver);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+  .section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+  .field{margin-bottom:12px;}
+  .field label{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:6px;}
+  .text-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:15px;padding:12px;outline:none;transition:border-color .2s;}
+  .text-input:focus{border-color:var(--silver);}
+  .text-input::placeholder{color:var(--muted);}
+  textarea.text-input{resize:none;height:140px;line-height:1.6;}
+
+  .cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .cat-btn{background:var(--btn);border:1px solid var(--btn-border);border-radius:8px;padding:10px 4px;cursor:pointer;font-family:var(--sans);font-size:11px;font-weight:700;color:var(--muted);transition:all .15s;text-align:center;}
+  .cat-icon{font-size:20px;display:block;margin-bottom:3px;}
+  .cat-btn.selected{border-color:var(--silver-hi);color:var(--silver-hi);background:rgba(226,230,234,.08);}
+
+  .config-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+  .config-item{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;}
+  .config-item label{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:6px;}
+  .config-item input{width:100%;background:transparent;border:none;color:var(--silver-hi);font-family:var(--mono);font-size:15px;outline:none;font-weight:bold;}
+
+  .counter{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;margin-top:6px;}
+  .counter span{color:var(--silver-hi);}
+
+  .btn-generate{
+    width:100%;border:none;border-radius:8px;padding:14px;
+    font-family:var(--sans);font-size:15px;font-weight:800;letter-spacing:1px;
+    cursor:pointer;margin-top:12px;transition:all .15s;text-transform:uppercase;
+    background:linear-gradient(135deg,#3a3e45 0%,#52575f 50%,#3a3e45 100%);
+    color:var(--silver-hi);
+    border:1px solid var(--btn-border);
+    box-shadow:0 1px 0 rgba(255,255,255,.06) inset, 0 2px 8px rgba(0,0,0,.4);
+  }
+  .btn-generate:active{transform:scale(.98);opacity:.9;}
+
+  .missing-card{background:rgba(100,100,110,.08);border:1px solid rgba(120,120,130,.3);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:none;}
+  .missing-card.visible{display:block;}
+  .missing-title{font-family:var(--mono);font-size:10px;color:var(--silver);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+  .missing-chars{display:flex;flex-wrap:wrap;gap:6px;}
+  .missing-char{background:rgba(120,120,130,.15);border:1px solid rgba(120,120,130,.3);border-radius:4px;padding:3px 8px;font-family:var(--mono);font-size:13px;color:var(--silver-hi);}
+
+  .preview-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;display:none;}
+  .preview-card.visible{display:block;}
+  .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+  .stat-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;}
+  .stat-val{font-family:var(--mono);font-size:20px;font-weight:bold;color:var(--silver-hi);display:block;}
+  .stat-label{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+
+  .steps-list{display:flex;flex-direction:column;gap:4px;max-height:260px;overflow-y:auto;padding-right:4px;margin-bottom:12px;}
+  .steps-list::-webkit-scrollbar{width:3px;}
+  .steps-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+  .step-item{display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:6px;padding:8px 10px;font-family:var(--mono);font-size:11px;}
+  .step-num{color:var(--muted);font-size:10px;min-width:28px;}
+  .step-char{min-width:26px;height:26px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+  .step-char.letra{background:#2e3137;border:1px solid #4a4f57;color:var(--silver-hi);font-weight:bold;font-family:var(--mono);}
+  .step-char.especial{background:#252830;border:1px solid #3d4148;color:var(--silver);}
+  .step-char.accion{background:#252830;border:1px solid #3d4148;color:var(--text);}
+  .step-char.refresh{background:#1f2124;border:1px solid var(--btn-border);color:var(--silver);}
+  .step-char.ciclo{background:#111214;border:1px solid var(--silver);color:var(--silver-hi);font-family:var(--mono);font-size:10px;}
+  .step-coords{color:var(--silver);flex:1;font-size:11px;}
+
+  .action-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .btn-action{
+    background:var(--btn);border:1px solid var(--btn-border);border-radius:8px;
+    padding:12px;font-family:var(--sans);font-size:13px;font-weight:700;
+    cursor:pointer;transition:all .15s;text-align:center;color:var(--silver-hi);
+    box-shadow:0 1px 0 rgba(255,255,255,.04) inset;
+  }
+  .btn-action:hover{background:var(--btn-hi);border-color:var(--silver);}
+  .btn-action:active{transform:scale(.97);opacity:.8;}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);
+    background:linear-gradient(135deg,#3a3e45,#52575f);
+    color:var(--silver-hi);font-family:var(--mono);font-size:12px;font-weight:bold;
+    padding:10px 20px;border-radius:20px;letter-spacing:1px;
+    border:1px solid var(--btn-border);
+    transition:transform .3s ease;z-index:999;white-space:nowrap;}
+  .toast.show{transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">▸ MacroKeys Batch</div>
+  <h1>BATCH GENERATOR</h1>
+  <p class="subtitle">tarot · macrodroid · s24 ultra</p>
+</header>
+
+<div class="card">
+  <div class="section-label">configuración</div>
+
+  <div class="field">
+    <label>Nombre del macro</label>
+    <input class="text-input" id="macroNombre" placeholder="Ej: Batch_Amor_01">
+  </div>
+
+  <div class="field">
+    <label>Categoría (para todos los ciclos)</label>
+    <div class="cat-grid">
+      <button class="cat-btn selected" data-cat="amor" onclick="selectCat(this)">
+        <span class="cat-icon">♥</span>Amor
+      </button>
+      <button class="cat-btn" data-cat="dinero" onclick="selectCat(this)">
+        <span class="cat-icon">◈</span>Dinero
+      </button>
+      <button class="cat-btn" data-cat="suerte" onclick="selectCat(this)">
+        <span class="cat-icon">✦</span>Suerte
+      </button>
+      <button class="cat-btn" data-cat="general" onclick="selectCat(this)">
+        <span class="cat-icon">✦</span>General
+      </button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Nombres (uno por línea)</label>
+    <textarea class="text-input" id="nombres" placeholder="sofia&#10;martin&#10;lucas&#10;valentina" oninput="contar()"></textarea>
+    <div class="counter">Ciclos: <span id="cntNombres">0</span></div>
+  </div>
+
+  <div class="field">
+    <label>Preguntas (una por línea, mismo orden)</label>
+    <textarea class="text-input" id="preguntas" placeholder="va a volver conmigo?&#10;me quiere de verdad?" oninput="contar()"></textarea>
+    <div class="counter">Preguntas: <span id="cntPreguntas">0</span></div>
+  </div>
+
+  <div class="config-row">
+    <div class="config-item">
+      <label>Pausa letras (ms)</label>
+      <input type="number" id="pausaLetras" value="100" min="50" max="2000">
+    </div>
+    <div class="config-item">
+      <label>Pausa símbolos (ms)</label>
+      <input type="number" id="pausaSimbolos" value="150" min="50" max="2000">
+    </div>
+  </div>
+
+  <button class="btn-generate" onclick="generar()">◆ GENERAR MACRO BATCH</button>
+</div>
+
+<div class="missing-card" id="missingCard">
+  <div class="missing-title">△ caracteres sin coordenadas</div>
+  <div class="missing-chars" id="missingChars"></div>
+</div>
+
+<div class="preview-card" id="previewCard">
+  <div class="section-label">secuencia generada</div>
+  <div class="stats-row">
+    <div class="stat-box"><span class="stat-val" id="statCiclos">0</span><span class="stat-label">Ciclos</span></div>
+    <div class="stat-box"><span class="stat-val" id="statAcciones">0</span><span class="stat-label">Acciones</span></div>
+    <div class="stat-box"><span class="stat-val" id="statTiempo">0s</span><span class="stat-label">Tiempo est.</span></div>
+  </div>
+  <div class="steps-list" id="stepsList"></div>
+  <div class="action-row">
+    <button class="btn-action" onclick="descargar()">↓ descargar .mdr</button>
+    <button class="btn-action" onclick="copiar()">⊡ copiar JSON</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const COORDS = {
+  'a':{x:71.5,y:1780},'b':{x:650,y:1980},'c':{x:448,y:1950},
+  'd':{x:278,y:1820},'e':{x:257,y:1643},'f':{x:378,y:1835},
+  'g':{x:480,y:1840},'h':{x:593,y:1817},'i':{x:787,y:1661},
+  'j':{x:689,y:1814},'k':{x:788,y:1819},'l':{x:912,y:1831},
+  'm':{x:821,y:1975},'n':{x:732,y:1980},'ñ':{x:1018,y:1820},
+  'o':{x:909,y:1660},'p':{x:1025,y:1675},'q':{x:67,y:1649},
+  'r':{x:376,y:1664},'s':{x:152,y:1821},'t':{x:470,y:1670},
+  'u':{x:694,y:1675},'v':{x:525,y:1986},'w':{x:158,y:1665},
+  'x':{x:333,y:1970},'y':{x:587,y:1670},'z':{x:215,y:1973},
+  ' ':{x:540,y:2117},
+};
+
+const SYMBOL_COORDS = {
+  '?':{x:850,y:1970},
+  ',':{x:209,y:2105},
+  '!':{x:61,y:1800},
+};
+
+const BTN_SIMBOLOS = {x:101,y:2117};
+
+const APP = {
+  ingresar:   {x:567, y:764},
+  nombre:     {x:532, y:1397},
+  continuar:  {x:534, y:1010},
+  tirar:      {x:663, y:1091},
+  carta2:     {x:743, y:1724},
+  carta3:     {x:738, y:1850},   // ← 1850 (real)
+  carta3extra:{x:735, y:1850},   // ← 1850 (real)
+  swipeA:     {x:760, y:1723},
+  swipeB:     {x:845, y:1159},
+  detener:    {x:970, y:160},
+  refresh1:   {x:320, y:150},
+  refresh2:   {x:303, y:317},
+  grabar:     {x:645, y:945},
+  confirmar:  {x:700, y:2050},
+  omitir:     {x:554, y:1300},
+  swipeX1:570, swipeY1:55, swipeX2:570, swipeY2:550,
+  categorias: {
+    amor:    {x:270, y:1453},
+    dinero:  {x:804, y:1100},
+    suerte:  {x:319, y:1448},
+    general: {x:798, y:1445},
+  }
+};
+
+let categoriaSeleccionada = 'amor';
+let generatedMacro = null;
+
+function selectCat(btn) {
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  categoriaSeleccionada = btn.dataset.cat;
+}
+
+function contar() {
+  const n = document.getElementById('nombres').value.split('\n').filter(l=>l.trim()).length;
+  const p = document.getElementById('preguntas').value.split('\n').filter(l=>l.trim()).length;
+  document.getElementById('cntNombres').textContent = n;
+  document.getElementById('cntPreguntas').textContent = p;
+}
+
+function makeClick(x, y, s, comment='') {
+  return {
+    action:0,
+    uiInteractionConfiguration:{blocking:false,checkOverlays:false,clickOption:2,contentDescription:'',longClick:false,textMatchOption:0,useRegex:false,xyPercentages:false,xyPoint:{x:Math.round(x),y:Math.round(y)},type:'Click'},
+    disableLogging:false,m_SIGUID:s,m_classType:'UIInteractionAction',m_comment:comment,m_constraintList:[],m_isDisabled:false,m_isOrCondition:false
+  };
+}
+
+function makeSwipe(x1, y1, x2, y2, s, comment='') {
+  return {
+    action:7,
+    uiInteractionConfiguration:{durationMs:250,gestures:[{endX:Math.round(x2),endY:Math.round(y2)}],startX:Math.round(x1),startY:Math.round(y1),waitBeforeNext:true,xyPercentages:false,type:'GestureSequence'},
+    disableLogging:false,m_SIGUID:s,m_classType:'UIInteractionAction',m_comment:comment,m_constraintList:[],m_isDisabled:false,m_isOrCondition:false
+  };
+}
+
+function makePause(seconds, s, ms=0, comment='') {
+  const t = seconds*1000+ms;
+  return {m_delayInMilliSeconds:t%1000,m_delayInSeconds:Math.floor(t/1000),m_useAlarm:true,unitForVariables:0,disableLogging:false,m_SIGUID:s,m_classType:'PauseAction',m_comment:comment,m_constraintList:[],m_isDisabled:false,m_isOrCondition:false};
+}
+
+// Launch usando la estructura real del MK_REAL_FINAL:
+// lanza Chrome sin URL fija — MacroDroid pide elegir la app al ejecutar
+function makeLaunch(s) {
+  return {
+    m_applicationName:'Chrome',
+    m_excludeFromRecents:false,
+    m_packageToLaunch:'com.android.chrome',
+    m_startNew:true,
+    option:0,
+    disableLogging:false,
+    m_SIGUID:s,
+    m_classType:'LaunchActivityAction',
+    m_comment:'Abrir app en Chrome',
+    m_constraintList:[],
+    m_isDisabled:false,
+    m_isOrCondition:false
+  };
+}
+
+function escribir(texto, pausaMs, pausaSim, s, actions, steps, missing) {
+  const t = texto.toLowerCase();
+  for (let i = 0; i < t.length; i++) {
+    const ch = t[i];
+    if (COORDS[ch] !== undefined) {
+      actions.push(makeClick(COORDS[ch].x, COORDS[ch].y, s++, `Letra ${ch === ' ' ? 'ESPACIO' : ch.toUpperCase()}`));
+      actions.push(makePause(0, s++, pausaMs, `Pausa letra ${ch === ' ' ? 'ESPACIO' : ch.toUpperCase()}`));
+      steps.push({char: ch===' '?'␣':ch.toUpperCase(), type:'letra', label:`${ch===' '?'ESPACIO':ch.toUpperCase()} (${COORDS[ch].x},${COORDS[ch].y})`});
+    } else if (SYMBOL_COORDS[ch] !== undefined) {
+      actions.push(makeClick(BTN_SIMBOLOS.x, BTN_SIMBOLOS.y, s++, `Modo simbolo ON (${ch})`));
+      actions.push(makePause(0, s++, pausaSim, 'Esperar modo simbolo'));
+      actions.push(makeClick(SYMBOL_COORDS[ch].x, SYMBOL_COORDS[ch].y, s++, `Simbolo ${ch}`));
+      actions.push(makePause(0, s++, pausaMs, `Pausa simbolo ${ch}`));
+      actions.push(makeClick(BTN_SIMBOLOS.x, BTN_SIMBOLOS.y, s++, `Modo simbolo OFF (${ch})`));
+      actions.push(makePause(0, s++, pausaSim, 'Esperar modo normal'));
+      steps.push({char:ch, type:'especial', label:`${ch} → modo símbolo`});
+    } else {
+      missing.add(ch===' '?'(espacio)':ch);
+    }
+  }
+  return s;
+}
+
+// Flujo real según MK_REAL_FINAL — Opción A
+// La pausa de 5s la come el refresh del ciclo anterior (o el launch inicial)
+// Cada ciclo arranca directo con CLICK ingresar
+function buildCiclo(nombre, pregunta, cat, pausaMs, pausaSim, s, actions, steps, missing, esUltimo) {
+  const catIcon   = {amor:'♥',dinero:'◈',suerte:'✦',general:'✦'};
+  const catCoords = APP.categorias[cat];
+
+  // — CLICK ingresar + PAUSE 3s (sin pausa previa — la come el refresh anterior)
+  actions.push(makeClick(APP.ingresar.x, APP.ingresar.y, s++, 'Ingresar a la app'));
+  steps.push({char:'↵', type:'accion', label:`CLICK ingresar (${APP.ingresar.x},${APP.ingresar.y})`});
+  actions.push(makePause(3, s++, 0, 'Esperar carga app'));
+  steps.push({char:'◷', type:'accion', label:'PAUSE 3s'});
+
+  // — SWIPE DOWN x2 para abrir panel y botones
+  actions.push(makeSwipe(APP.swipeX1, APP.swipeY1, APP.swipeX2, APP.swipeY2, s++, 'Swipe panel notificaciones'));
+  steps.push({char:'↓', type:'accion', label:'SWIPE DOWN 1 — panel notificaciones'});
+  actions.push(makePause(1, s++, 0, 'Esperar panel'));
+  actions.push(makeSwipe(APP.swipeX1, APP.swipeY1, APP.swipeX2, APP.swipeY2, s++, 'Swipe botones personalizados'));
+  steps.push({char:'↓', type:'accion', label:'SWIPE DOWN 2 — botones personalizados'});
+  actions.push(makePause(1, s++, 0, 'Esperar botones'));
+
+  // — Activar grabación
+  actions.push(makeClick(APP.grabar.x, APP.grabar.y, s++, 'Boton grabar pantalla'));
+  steps.push({char:'●', type:'accion', label:`CLICK grabar (${APP.grabar.x},${APP.grabar.y})`});
+  actions.push(makePause(0, s++, 800, 'Esperar dialogo'));
+  actions.push(makeClick(APP.confirmar.x, APP.confirmar.y, s++, 'Confirmar grabacion'));
+  steps.push({char:'✓', type:'accion', label:`CLICK confirmar (${APP.confirmar.x},${APP.confirmar.y})`});
+  actions.push(makePause(0, s++, 500, 'Esperar countdown'));
+  actions.push(makeClick(APP.omitir.x, APP.omitir.y, s++, 'Omitir countdown'));
+  steps.push({char:'▶', type:'accion', label:`CLICK omitir countdown (${APP.omitir.x},${APP.omitir.y})`});
+  actions.push(makePause(0, s++, 200, 'Pausa inicio grabacion'));
+  actions.push(makePause(2, s++, 0, 'Grabacion activa'));
+  steps.push({char:'◷', type:'accion', label:'PAUSE 2s — grabación iniciada'});
+
+  // — Tipear nombre
+  actions.push(makeClick(APP.nombre.x, APP.nombre.y, s++, 'Click campo nombre'));
+  steps.push({char:'✎', type:'accion', label:`CLICK campo nombre (${APP.nombre.x},${APP.nombre.y})`});
+  actions.push(makePause(1, s++, 0, 'Esperar teclado'));
+  s = escribir(nombre, pausaMs, pausaSim, s, actions, steps, missing);
+
+  // — Continuar
+  actions.push(makeClick(APP.continuar.x, APP.continuar.y, s++, 'Boton continuar'));
+  steps.push({char:'→', type:'accion', label:`CLICK continuar (${APP.continuar.x},${APP.continuar.y})`});
+  actions.push(makePause(1, s++, 0, 'Esperar pantalla categoria'));
+
+  // — Categoría
+  actions.push(makeClick(catCoords.x, catCoords.y, s++, `Categoria ${cat}`));
+  steps.push({char:catIcon[cat], type:'accion', label:`CLICK ${cat.toUpperCase()} (${catCoords.x},${catCoords.y})`});
+  actions.push(makePause(1, s++, 0, 'Esperar pantalla pregunta'));
+
+  // — Tipear pregunta
+  s = escribir(pregunta, pausaMs, pausaSim, s, actions, steps, missing);
+
+  // — Tirar cartas + PAUSE 9s (real)
+  actions.push(makeClick(APP.tirar.x, APP.tirar.y, s++, 'Tirar cartas'));
+  steps.push({char:'▣', type:'accion', label:`CLICK tirar cartas (${APP.tirar.x},${APP.tirar.y})`});
+  actions.push(makePause(9, s++, 0, 'Esperar animacion cartas'));
+  steps.push({char:'◷', type:'accion', label:'PAUSE 9s'});
+
+  // — Revelar carta 2 + tap extra inmediato + PAUSE 5s
+  actions.push(makeClick(APP.carta2.x, APP.carta2.y, s++, 'Revelar carta 2'));
+  steps.push({char:'▣', type:'accion', label:`CLICK revelar carta 2 (${APP.carta2.x},${APP.carta2.y})`});
+  actions.push(makeClick(APP.carta3.x, APP.carta3.y, s++, 'Tap extra carta 2 (UI variable)'));
+  steps.push({char:'▣', type:'accion', label:`CLICK tap extra carta 2 (${APP.carta3.x},${APP.carta3.y})`});
+  actions.push(makePause(5, s++, 0, 'Esperar carta 2'));
+  steps.push({char:'◷', type:'accion', label:'PAUSE 5s'});
+
+  // — Revelar carta 3 + PAUSE 1s
+  actions.push(makeClick(APP.carta3.x, APP.carta3.y, s++, 'Revelar carta 3'));
+  steps.push({char:'▣', type:'accion', label:`CLICK revelar carta 3 (${APP.carta3.x},${APP.carta3.y})`});
+  actions.push(makePause(1, s++, 0, 'Esperar carta 3'));
+  steps.push({char:'◷', type:'accion', label:'PAUSE 1s'});
+
+  // — Tap extra carta 3 + PAUSE 1s
+  actions.push(makeClick(APP.carta3extra.x, APP.carta3extra.y, s++, 'Tap extra carta 3'));
+  steps.push({char:'▣', type:'accion', label:`CLICK tap extra (${APP.carta3extra.x},${APP.carta3extra.y})`});
+  actions.push(makePause(1, s++, 0, 'Esperar texto'));
+  steps.push({char:'◷', type:'accion', label:'PAUSE 1s'});
+
+  // — SWIPE ver texto
+  actions.push(makeSwipe(APP.swipeA.x, APP.swipeA.y, APP.swipeB.x, APP.swipeB.y, s++, 'Swipe ver texto'));
+  steps.push({char:'◉', type:'accion', label:`SWIPE ver texto (${APP.swipeA.x},${APP.swipeA.y})→(${APP.swipeB.x},${APP.swipeB.y})`});
+
+  // — PAUSE 4s antes de detener
+  actions.push(makePause(4, s++, 0, 'Esperar antes de detener'));
+  steps.push({char:'◷', type:'accion', label:'PAUSE 4s'});
+
+  // — Detener grabación
+  actions.push(makeClick(APP.detener.x, APP.detener.y, s++, 'Detener grabacion'));
+  steps.push({char:'■', type:'accion', label:`CLICK detener grabación (${APP.detener.x},${APP.detener.y})`});
+
+  // — PAUSE 2s después de detener
+  actions.push(makePause(2, s++, 0, 'Esperar fin grabacion'));
+  steps.push({char:'◷', type:'accion', label:'PAUSE 2s'});
+
+  // — Refresh + PAUSE 5s al final (todos menos el último)
+  // La pausa de 5s queda acá para que el siguiente ciclo arranque directo con ingresar
+  if (!esUltimo) {
+    actions.push(makeClick(APP.refresh1.x, APP.refresh1.y, s++, 'Refresh tap 1'));
+    steps.push({char:'↺', type:'refresh', label:`CLICK refresh tap1 (${APP.refresh1.x},${APP.refresh1.y})`});
+    actions.push(makePause(2, s++, 0, 'Esperar menu refresh'));
+    steps.push({char:'◷', type:'refresh', label:'PAUSE 2s'});
+    actions.push(makeClick(APP.refresh2.x, APP.refresh2.y, s++, 'Refresh tap 2 confirmar'));
+    steps.push({char:'↺', type:'refresh', label:`CLICK refresh tap2 (${APP.refresh2.x},${APP.refresh2.y})`});
+    actions.push(makePause(5, s++, 0, 'Esperar carga pagina'));
+    steps.push({char:'◷', type:'refresh', label:'PAUSE 5s — listo para siguiente ciclo'});
+  }
+
+  return s;
+}
+
+function generar() {
+  const macroNombre = document.getElementById('macroNombre').value.trim() || 'Batch_Tarot';
+  const pausaMs     = parseInt(document.getElementById('pausaLetras').value) || 100;
+  const pausaSim    = parseInt(document.getElementById('pausaSimbolos').value) || 150;
+
+  const nombres   = document.getElementById('nombres').value.split('\n').map(l=>l.trim()).filter(l=>l);
+  const preguntas = document.getElementById('preguntas').value.split('\n').map(l=>l.trim()).filter(l=>l);
+
+  if (!nombres.length)   { showToast('Ingresá al menos un nombre'); return; }
+  if (!preguntas.length) { showToast('Ingresá al menos una pregunta'); return; }
+  if (nombres.length !== preguntas.length) { showToast('Misma cantidad de nombres y preguntas'); return; }
+
+  let s = 1780618043788; // base SIGUID igual al MK_REAL_FINAL, siempre secuencial y único
+  const actions = [], steps = [], missing = new Set();
+
+  // — LAUNCH + doble PAUSE 5s (10s total, igual que el real)
+  actions.push(makeLaunch(s++));
+  steps.push({char:'⊕', type:'accion', label:'LAUNCH Chrome'});
+  actions.push(makePause(5, s++, 0, 'Pausa carga 1'));
+  steps.push({char:'◷', type:'accion', label:'PAUSE 5s'});
+  actions.push(makePause(5, s++, 0, 'Pausa carga 2'));
+  steps.push({char:'◷', type:'accion', label:'PAUSE 5s — carga inicial'});
+
+  nombres.forEach((nombre, i) => {
+    steps.push({char:`${i+1}`, type:'ciclo', label:`════ CICLO ${i+1}: ${nombre} ════`});
+    s = buildCiclo(nombre, preguntas[i], categoriaSeleccionada, pausaMs, pausaSim, s, actions, steps, missing, i === nombres.length - 1);
+  });
+
+  let tiempoMs = 0;
+  actions.forEach(a => {
+    if (a.m_classType === 'PauseAction') tiempoMs += a.m_delayInSeconds*1000 + a.m_delayInMilliSeconds;
+  });
+
+  document.getElementById('statCiclos').textContent   = nombres.length;
+  document.getElementById('statAcciones').textContent = actions.length;
+  document.getElementById('statTiempo').textContent   = (tiempoMs/60000).toFixed(1) + 'm';
+
+  const missingCard = document.getElementById('missingCard');
+  if (missing.size > 0) {
+    document.getElementById('missingChars').innerHTML = [...missing].map(c=>`<span class="missing-char">${c}</span>`).join('');
+    missingCard.classList.add('visible');
+  } else {
+    missingCard.classList.remove('visible');
+  }
+
+  document.getElementById('stepsList').innerHTML = steps.map((st,i) => `
+    <div class="step-item">
+      <span class="step-num">${String(i+1).padStart(3,'0')}</span>
+      <span class="step-char ${st.type}">${st.char}</span>
+      <span class="step-coords">${st.label}</span>
+    </div>`).join('');
+
+  const mn = 'MK_' + macroNombre.replace(/\s+/g,'_').substring(0,20);
+  generatedMacro = {
+    activityRecognitionUpdateRate:120,autoCloseDrawer:false,cellTowerGroups:[],cellTowerUpdateRate:5,cellTowerUseAlarm:false,cellTowersIgnore:[],customDrawerConfigs:[],darkModeOption:'-1',defaultBracketType:0,disableAnalytics:false,disableCrashLogging:false,disabledCategories:[],
+    drawerConfiguration:{backgroundColor:-1,drawerItems:[],headerColor:-13942173,leftSide:false,swipeAreaColor:-7829368,swipeAreaHeight:20,swipeAreaOffset:40,swipeAreaOpacity:80,swipeAreaWidth:14,visibleSwipeAreaWidth:0},
+    drawerSwipeDownToOpen:false,drawerSwipeHorizontallyToOpen:true,drawerSwipeUpToOpen:false,drawerTextSize:14,enableExperimentalFeatures:false,enableRootFeatures:true,exportAppVersion:596300015,exportFormat:2,
+    favouriteActions:['com.arlosoft.macrodroid.action.info.LaunchActivityActionInfo','com.arlosoft.macrodroid.action.info.PauseActionInfo','com.arlosoft.macrodroid.action.info.UIInteractionActionInfo'],
+    favouriteConstraints:[],favouriteTriggers:['com.arlosoft.macrodroid.triggers.info.FloatingButtonTriggerInfo','com.arlosoft.macrodroid.triggers.info.EmptyTriggerInfo'],
+    flipWithScreenOff:false,forceBlackBackground:true,homeScreenTilesNumRows:3,longPressToConfigure:true,
+    macroList:[{
+      aiGenerated:0,breakpoints:[],disabledTimestamp:0,exportedActionBlocks:[],forceEvenIfNotEnabledTimestamp:0,isActionBlock:false,isExtra:false,isFavourite:false,lastEditedTimestamp:Date.now(),localVariables:[],localVarsAlphabetical:true,
+      m_GUID:Math.floor(Math.random()*-9000000000000),
+      m_actionList:actions,m_category:'MacroKeys',m_constraintList:[],m_description:'Generado por MacroKeys Batch',m_descriptionOpen:false,m_enabled:true,m_excludeLog:false,m_headingColor:0,m_isOrCondition:false,m_name:mn,m_triggerList:[]
+    }],
+    mediaButtonPassThroughUnhandled:true,notificationButtonBarIsEnabled:true,notificationPriority:2,playSoundAudioStream:5,quickRunMacroIds:[],readScreenUpdateRate:2000,showLocationServicesWarning:true,showWhatsNewAtStartup:true,smsMonitorInbox:false,stopWatches:[],timestamp:Date.now(),udpNotifyFailure:true,userIcons:[],userLogMaxSize:20000,variables:[],vibrateOnFlip:true,vibrateOnShake:true,volumeButtonTriggerAlternativeConfig:false,widgetButtonVibrateOnPress:false
+  };
+
+  document.getElementById('previewCard').classList.add('visible');
+  showToast(`✓ ${nombres.length} ciclos · ${actions.length} acciones`);
+}
+
+function descargar() {
+  if (!generatedMacro) return;
+  const nombre = generatedMacro.macroList[0].m_name;
+  const blob = new Blob([JSON.stringify(generatedMacro)], {type:'application/octet-stream'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = nombre.endsWith('.mdr') ? nombre : nombre + '.mdr';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('✓ ' + a.download);
+}
+
+function copiar() {
+  if (!generatedMacro) return;
+  navigator.clipboard.writeText(JSON.stringify(generatedMacro))
+    .then(()=>showToast('✓ JSON copiado!')).catch(()=>showToast('Error al copiar'));
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+</script>
+</body>
+</html>
